@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obramat - Gestión de Propuestas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obramat-yellow: #FFCC00;
+            --obramat-dark: #1A1C1E;
+            --obramat-grey: #F4F5F7;
+            --border-color: #E2E8F0;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --white: #FFFFFF;
+            --danger: #E53935;
+            --success: #2E7D32;
+            --pending: #F57C00;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--obramat-grey);
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+        }
+
+        /* Cabecera Corporativa */
+        .navbar {
+            background-color: var(--obramat-dark);
+            color: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 5px solid var(--obramat-yellow);
+        }
+
+        .navbar-brand {
+            text-decoration: none;
+            color: white;
+            font-weight: 900;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        /* Contenedor Principal */
+        .container {
+            max-width: 95%;
+            margin: 30px auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--obramat-grey);
+            padding-bottom: 15px;
+        }
+
+        /* Botón Volver */
+        .back-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--obramat-dark); }
+
+        h2 {
+            margin: 0;
+            font-weight: 900;
+            color: var(--obramat-dark);
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+
+        /* Filtros */
+        .filters-container {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+            background-color: var(--obramat-grey);
+            padding: 15px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .filter-group select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'Montserrat';
+        }
+
+        /* Tabla */
+        .table-responsive { overflow-x: auto; min-height: 400px; }
+
+        table.propuestas-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        .propuestas-table th {
+            background-color: var(--obramat-dark);
+            color: white;
+            padding: 15px 10px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .propuestas-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Paginación */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: white;
+            cursor: pointer;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+
+        .page-btn:hover { background-color: var(--obramat-grey); }
+
+        .page-btn.active {
+            background-color: var(--obramat-yellow);
+            border-color: var(--obramat-yellow);
+        }
+
+        /* Badges */
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: 700; text-transform: uppercase; display: inline-block; }
+        .status-pending { background: #FFF3E0; color: var(--pending); border: 1px solid #FFE0B2; }
+        .status-validated { background: #E8F5E9; color: var(--success); border: 1px solid #C8E6C9; }
+        .status-cancelled { background: #FFEBEE; color: var(--danger); border: 1px solid #FFCDD2; }
+
+        /* Botones */
+        .btn-action { padding: 8px 12px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; border: none; font-size: 0.75em; }
+        .btn-validate { background: var(--obramat-yellow); color: var(--obramat-dark); margin-right: 5px; }
+        .btn-validate:hover { background-color: #E6B800; }
+        .btn-cancel { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-cancel:hover { background-color: var(--danger); color: white; }
+        .btn-detail { background: var(--obramat-grey); border: 1px solid #CCC; padding: 6px 10px; font-weight: 600; cursor: pointer; }
+        .btn-detail:hover { background-color: #E2E8F0; }
+
+        /* Modales */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 850px; text-align: center; }
+        
+        .detalle-table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin: 20px 0; }
+        .detalle-table th { background: var(--obramat-grey); padding: 10px; border: 1px solid var(--border-color); }
+        .detalle-table td { padding: 8px; border: 1px solid var(--border-color); }
+
+        .sumatorio-box { background: #E8F5E9; padding: 15px; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; }
+        
+        .select-horario { padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); font-family: 'Montserrat'; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">OBRAMAT</a>
+    <div style="font-size: 0.8em;">Logística Azuqueca - Gestión de Propuestas</div>
+</nav>
+
+<div class="container">
+    <div class="section-header">
+        <a href="index.html" class="back-link">← Volver al Menú Principal</a>
+        <h2>Gestión de Propuestas Recibidas</h2>
+    </div>
+
+    <div class="filters-container">
+        <div class="filter-group">
+            <label>Estado:</label>
+            <select id="filterEstado" onchange="resetAndRender()">
+                <option value="Todos">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Validada">Validada</option>
+                <option value="Cancelada">Cancelada</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Fecha Entrega:</label>
+            <select id="filterFecha" onchange="resetAndRender()">
+                <option value="Todas">Todas las fechas</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="propuestas-table">
+            <thead>
+                <tr>
+                    <th>Ref. Propuesta</th>
+                    <th>Proveedor</th>
+                    <th>Detalle Soportes</th>
+                    <th>Estado</th>
+                    <th>Fecha Entrega</th>
+                    <th>Franja Horaria</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="mainTbody"></tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="paginationControls"></div>
+</div>
+
+<div id="modalDetalle" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Desglose de Propuesta <span id="modalRef" style="color:var(--danger)"></span></h3>
+        <div id="modalTableContainer"></div>
+        <div class="sumatorio-box" id="modalSumatorio"></div>
+        <button class="btn-action btn-validate" style="margin-top:20px;" onclick="cerrarDetalles()">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    let rawData = [];
+    let currentPage = 1;
+    const pageSize = 20;
+
+    // Generar fechas laborales próximas para simulación
+    function getDates() {
+        const dates = [];
+        let d = new Date();
+        while(dates.length < 10) {
+            if(d.getDay() !== 0 && d.getDay() !== 6) dates.push(d.toLocaleDateString('es-ES'));
+            d.setDate(d.getDate() + 1);
+        }
+        return dates;
+    }
+
+    const proximasFechas = getDates();
+
+    function init() {
+        const fSelect = document.getElementById('filterFecha');
+        proximasFechas.forEach(f => fSelect.innerHTML += `<option value="${f}">${f}</option>`);
+
+        // Crear 60 registros de prueba
+        for(let i=1; i<=60; i++) {
+            rawData.push({
+                ref: `REF-${2026000 + i}`,
+                prov: ["ROCA SANITARIO", "CEYS SL", "BOSCH TOOLS", "MAKITA ESPAÑA", "FISCHER DAREX"][i % 5] + " " + i,
+                estado: "Pendiente",
+                fecha: proximasFechas[i % proximasFechas.length],
+                horario: "",
+                pedidos: [
+                    { id: "1800" + i, sec: "SANITARIO", alm: "012 Usera", c1: Math.floor(Math.random()*5), c2: 1, p1: 1, p2: 0, p3: 0, p4: 0, p5: 0 },
+                    { id: "1900" + i, sec: "SANITARIO", alm: "012 Usera", c1: 0, c2: 0, p1: 0, p2: 2, p3: 0, p4: 0, p5: 1 }
+                ]
+            });
+        }
+        render();
+    }
+
+    function render() {
+        const est = document.getElementById('filterEstado').value;
+        const fec = document.getElementById('filterFecha').value;
+        
+        const filtered = rawData.filter(d => (est === "Todos" || d.estado === est) && (fec === "Todas" || d.fecha === fec));
+        const totalPages = Math.ceil(filtered.length / pageSize);
+        const data = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+        const tbody = document.getElementById('mainTbody');
+        tbody.innerHTML = '';
+
+        if(data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="padding:40px; color:#666; font-style:italic;">No hay resultados con estos filtros.</td></tr>';
+            document.getElementById('paginationControls').innerHTML = '';
+            return;
+        }
+
+        data.forEach(item => {
+            const isPending = item.estado === "Pendiente";
+            tbody.innerHTML += `
+                <tr>
+                    <td><span style="font-family:monospace; font-weight:700; background:#eee; padding:3px 6px; border-radius:4px;">${item.ref}</span></td>
+                    <td><strong>${item.prov}</strong></td>
+                    <td><button class="btn-detail" onclick="verDetalle('${item.ref}')">🔍 Ver Detalle</button></td>
+                    <td><span class="status-badge status-${item.estado.toLowerCase().replace('á','a')}">${item.estado}</span></td>
+                    <td>${item.fecha}</td>
+                    <td>
+                        ${isPending ? `<select class="select-horario" onchange="rawData.find(x=>x.ref==='${item.ref}').horario=this.value">
+                            <option value="">Sel...</option>
+                            ${generarHoras(item.horario)}
+                        </select>` : `<strong>${item.horario || '--'}</strong>`}
+                    </td>
+                    <td>
+                        ${isPending ? `
+                            <button class="btn-action btn-validate" onclick="validar('${item.ref}')">Validar</button>
+                            <button class="btn-action btn-cancel" onclick="cancelar('${item.ref}')">Cancelar</button>
+                        ` : `<span style="color:${item.estado === 'Validada' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${item.estado === 'Validada' ? '✓ CONFIRMADA' : '✗ RECHAZADA'}</span>`}
+                    </td>
+                </tr>
+            `;
+        });
+        renderPagination(totalPages);
+    }
+
+    function generarHoras(sel) {
+        let h = '';
+        for(let i=7; i<=15; i++) {
+            [`${i}:00`, `${i}:30`].forEach(t => h += `<option value="${t}" ${sel===t?'selected':''}>${t}</option>`);
+        }
+        h += '<option value="16:00">16:00</option>';
+        return h;
+    }
+
+    function renderPagination(total) {
+        const cont = document.getElementById('paginationControls');
+        cont.innerHTML = '';
+        if(total <= 1) return;
+        for(let i=1; i<=total; i++) {
+            cont.innerHTML += `<button class="page-btn ${i===currentPage?'active':''}" onclick="currentPage=${i}; render(); window.scrollTo(0,0);">${i}</button>`;
+        }
+    }
+
+    function validar(ref) {
+        const item = rawData.find(x => x.ref === ref);
+        if(!item.horario) return alert("Asigne una franja horaria antes de validar la cita.");
+        if(confirm(`¿Validar propuesta ${ref} para las ${item.horario}?`)) { item.estado = "Validada"; render(); }
+    }
+
+    function cancelar(ref) {
+        if(confirm(`¿Anular propuesta ${ref}? Esta acción no se puede deshacer.`)) { rawData.find(x => x.ref === ref).estado = "Cancelada"; render(); }
+    }
+
+    function verDetalle(ref) {
+        const item = rawData.find(x => x.ref === ref);
+        document.getElementById('modalRef').innerText = ref;
+        let tB = 0, tP = 0;
+        let h = `<table class="detalle-table"><thead><tr><th>Pedido</th><th>Secc</th><th>Alm</th><th title="Bultos Pequeños">C1</th><th title="Bultos Grandes">C2</th><th title="Medio Palet">P1</th><th title="Palet < 120">P2</th><th title="Palet > 120">P3</th><th title="Palet > 240">P4</th><th title="Jaulas">P5</th></tr></thead><tbody>`;
+        item.pedidos.forEach(p => {
+            tB += (p.c1 + p.c2); tP += (p.p1 + p.p2 + p.p3 + p.p4 + p.p5);
+            h += `<tr><td>${p.id}</td><td>${p.sec}</td><td>${p.alm}</td><td>${p.c1}</td><td>${p.c2}</td><td>${p.p1}</td><td>${p.p2}</td><td>${p.p3}</td><td>${p.p4}</td><td>${p.p5}</td></tr>`;
+        });
+        h += `</tbody></table>`;
+        document.getElementById('modalTableContainer').innerHTML = h;
+        document.getElementById('modalSumatorio').innerHTML = `<div>Total Bultos (C1+C2): <span style="color:var(--danger)">${tB}</span></div><div>Total Palets (P1-P5): <span style="color:var(--danger)">${tP}</span></div>`;
+        document.getElementById('modalDetalle').classList.add('active');
+    }
+
+    function cerrarDetalles() { document.getElementById('modalDetalle').classList.remove('active'); }
+    function resetAndRender() { currentPage = 1; render(); }
+
+    window.onload = init;
+</script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obramat - Solicitar Cita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obramat-yellow: #FFCC00;
+            --obramat-dark: #1A1C1E;
+            --obramat-grey: #F4F5F7;
+            --border-color: #E2E8F0;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --white: #FFFFFF;
+            --danger: #E53935;
+            --success: #2E7D32;
+        }
+
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--obramat-grey); margin: 0; padding: 0; color: var(--text-main); }
+        .navbar { background-color: var(--obramat-dark); color: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid var(--obramat-yellow); }
+        .navbar-brand { display: flex; align-items: center; gap: 15px; text-decoration: none; color: white; font-weight: 900; font-size: 24px; letter-spacing: 1px;}
+        .portal-title { font-weight: 400; font-size: 16px; color: #AAAAAA; border-left: 1px solid #555; padding-left: 15px; }
+        .contact-info { text-align: right; font-size: 0.85em; color: #CCCCCC; }
+        .contact-info strong { color: var(--obramat-yellow); }
+        
+        /* Contenedor más ancho para aprovechar la pantalla */
+        .container { max-width: 98%; margin: 20px auto; background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .section-header { margin-bottom: 20px; border-bottom: 2px solid var(--obramat-grey); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title-group { display: flex; flex-direction: column; }
+        .back-link { text-decoration: none; color: var(--text-muted); font-size: 0.85em; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 10px; transition: color 0.2s; }
+        .back-link:hover { color: var(--obramat-dark); }
+        h2 { margin: 0; font-weight: 700; color: var(--obramat-dark); font-size: 20px; text-transform: uppercase; }
+
+        .db-loader { background-color: #E3F2FD; border: 2px dashed #90CAF9; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 15px; font-size: 0.85em; }
+        .db-loader input[type="file"] { font-family: 'Montserrat', sans-serif; font-size: 0.8em; }
+        .db-status { font-weight: 700; color: var(--success); display: none; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; margin-top: 15px; }
+        .card { background: var(--white); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; }
+        .card-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--obramat-grey); padding-bottom: 8px; }
+        .equivalencias-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 0.75em; }
+        .eq-item { background: var(--obramat-grey); padding: 6px 10px; border-radius: 4px; border-left: 3px solid var(--obramat-yellow); }
+        
+        .totals-panel { background: var(--obramat-dark); color: var(--white); border-radius: 6px; padding: 15px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .total-item { display: flex; justify-content: space-between; align-items: center; font-size: 1em; font-weight: 600; }
+        .total-value { font-size: 1.6em; color: var(--obramat-yellow); font-weight: 900; }
+
+        .table-responsive { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 6px; }
+        
+        /* Ajustes de Tabla para fuentes pequeñas y sin scroll */
+        table.data-table { width: 100%; border-collapse: collapse; font-size: 0.75em; white-space: nowrap; }
+        .data-table th, .data-table td { padding: 6px 4px; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .data-table th { background-color: var(--obramat-grey); color: var(--obramat-dark); font-weight: 700; text-transform: uppercase; font-size: 0.85em; position: sticky; top: 0; border-bottom: 2px solid var(--border-color); }
+        .data-table tbody tr:hover { background-color: #FAFAFA; }
+        
+        /* Ajustes de Inputs */
+        .data-table input, .data-table select { width: 100%; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 0.95em; box-sizing: border-box; transition: all 0.2s; }
+        .data-table input:focus, .data-table select:focus { outline: none; border-color: var(--obramat-yellow); box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2); }
+        
+        /* Anchuras mínimas reducidas */
+        .in-pedido { min-width: 90px; }
+        .in-prov-num { min-width: 60px; }
+        .in-prov-name { min-width: 140px; }
+        .in-secc { min-width: 110px; }
+        .in-tienda { min-width: 115px; }
+        .in-fecha { min-width: 80px; }
+        .data-table input[type="number"] { width: 45px; min-width: 45px; text-align: center; padding: 4px 2px; }
+        
+        .readonly-result { font-weight: 700; color: var(--obramat-dark); background-color: var(--obramat-grey); min-width: 45px; font-size: 1.1em;}
+
+        .action-buttons { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
+        .btn { background-color: var(--obramat-yellow); color: var(--obramat-dark); border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: 700; font-size: 0.85em; text-transform: uppercase; transition: background-color 0.2s; font-family: 'Montserrat', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-flex; justify-content: center; align-items: center;}
+        .btn:hover { background-color: #E6B800; }
+        .btn-dark { background-color: var(--obramat-dark); color: var(--white); }
+        .btn-dark:hover { background-color: #333333; }
+        .btn-outline { background-color: transparent; color: var(--obramat-dark); border: 2px dashed var(--obramat-dark); box-shadow: none; cursor: pointer; }
+        .btn-outline:hover { background-color: #E2E8F0; }
+        .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 4px 8px; box-shadow: none; cursor: pointer; font-size: 0.9em;}
+        .btn-danger:hover { background-color: var(--danger); color: var(--white); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--white); padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 4px 25px rgba(0,0,0,0.2); max-width: 450px; width: 90%; }
+        .modal-content h3 { margin-top: 0; color: var(--obramat-dark); font-size: 18px; }
+        .modal-content p { color: var(--text-muted); margin-bottom: 25px; font-size: 14px; }
+        .modal-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+        <span class="logo-text">OBRAMAT</span>
+        <span class="portal-title">Portal de Tránsito B2B</span>
+    </a>
+    <div class="contact-info">
+        <div><strong>Centro Logístico Azuqueca:</strong> Avda Milán 10-12, 19200 (Guadalajara)</div>
+        <div><strong>Tfno:</strong> 949 266 287 / 670 630 273 | <strong>Email:</strong> citascentrologistico@bricomart.es</div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="section-header">
+        <div class="header-title-group">
+            <a href="index.html" class="back-link">← Volver al Menú Principal</a>
+            <h2>Gestión de Citas - Petición Getslot</h2>
+        </div>
+        
+        <div class="db-loader">
+            <label for="csvFileInput"><strong>1º) Cargar BBDD Pedidos (EKKO.csv):</strong></label>
+            <input type="file" id="csvFileInput" accept=".csv" onchange="cargarBaseDatos(event)">
+            <span class="db-status" id="dbStatus">✓ Datos cargados correctamente</span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title">Factores de Conversión (Volumen Palet Equivalente)</div>
+            <div class="equivalencias-grid">
+                <div class="eq-item"><strong>C1:</strong> Bulto &lt; 0.2m³ y 25kg (0.1)</div>
+                <div class="eq-item"><strong>C2:</strong> Bulto &lt; 0.4m³ y 50kg (0.3)</div>
+                <div class="eq-item"><strong>P1:</strong> Medio Palet Europeo (0.5)</div>
+                <div class="eq-item"><strong>P2:</strong> Palet lado &lt; 120cm (1.0)</div>
+                <div class="eq-item"><strong>P3:</strong> Palet lado 120-240cm (2.0)</div>
+                <div class="eq-item"><strong>P4:</strong> Palet lado &gt; 240cm (2.5)</div>
+                <div class="eq-item"><strong>P5:</strong> Jaula (1.0)</div>
+                <div class="eq-item"><strong>INC:</strong> Varios pedidos/1 soporte (0)</div>
+            </div>
+        </div>
+
+        <div class="totals-panel">
+            <div class="total-item">
+                <span>TOTAL PALETS</span>
+                <span class="total-value" id="grandTotalPalets">0.00</span>
+            </div>
+            <div class="total-item">
+                <span>TOTAL BULTOS</span>
+                <span class="total-value" id="grandTotalBultos">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="citasTable">
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Nº Prov.</th>
+                    <th>Proveedor</th>
+                    <th>Secc.</th>
+                    <th>Tienda (Destino)</th>
+                    <th>Fecha Entrega</th>
+                    <th title="Medio Palet (0.5)">P1</th>
+                    <th title="Palet < 120cm (1)">P2</th>
+                    <th title="Palet 120-240cm (2)">P3</th>
+                    <th title="Palet > 240cm (2.5)">P4</th>
+                    <th title="Jaula (1)">P5</th>
+                    <th title="Bulto Peq. (0.1)">C1</th>
+                    <th title="Bulto Gr. (0.3)">C2</th>
+                    <th>PALETS</th>
+                    <th>BULTOS</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+    
+    <div class="action-buttons">
+        <button class="btn" onclick="addRow()">+ Añadir Línea a Mano</button>
+        
+        <label for="csvListadoInput" class="btn btn-outline" style="margin:0;" title="Formato CSV: Pedido, P1, P2, P3, P4, P5, C1, C2">
+            📥 Cargar Listado CSV
+        </label>
+        <input type="file" id="csvListadoInput" accept=".csv" style="display:none" onchange="cargarListadoPedidos(event)">
+        
+        <div style="flex-grow: 1;"></div>
+        
+        <button class="btn btn-dark" onclick="openModal()">Enviar para validar</button>
+    </div>
+
+</div>
+
+<div id="validationModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Confirmación de Envío</h3>
+        <p>¿Seguro que quiere enviar para validar?</p>
+        <div class="modal-buttons">
+            <button class="btn" onclick="submitData()">Enviar</button>
+            <button class="btn btn-outline" onclick="closeModal()">Volver a editar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- LÓGICA DE BASE DE DATOS EKKO ---
+    let bdPedidos = {}; 
+
+    function cargarBaseDatos(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const contenido = e.target.result;
+            procesarCSV(contenido);
+        };
+        reader.readAsText(file);
+    }
+
+    function procesarCSV(contenido) {
+        const lineas = contenido.split('\n');
+        bdPedidos = {}; 
+
+        for (let i = 1; i < lineas.length; i++) {
+            if (!lineas[i].trim()) continue;
+            const columnas = lineas[i].split(',');
+            
+            if (columnas.length >= 6) {
+                const len = columnas.length;
+                const numPedido = columnas[len - 2].trim(); 
+                
+                bdPedidos[numPedido] = {
+                    numProv: columnas[0].trim(),
+                    nombreProv: columnas.slice(1, len - 4).join(',').replace(/"/g, '').trim(),
+                    seccion: columnas[len - 4].trim(),
+                    tienda: columnas[len - 3].trim(),
+                    fecha: columnas[len - 1].trim()
+                };
+            }
+        }
+        
+        const numRegistros = Object.keys(bdPedidos).length;
+        document.getElementById('dbStatus').style.display = 'inline';
+        document.getElementById('dbStatus').innerText = `✓ BD EKKO cargada (${numRegistros} pedidos)`;
+    }
+
+    // --- LÓGICA DE CARGA MASIVA DE PEDIDOS (.CSV) CON SOPORTES ---
+    function cargarListadoPedidos(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (Object.keys(bdPedidos).length === 0) {
+            alert("⚠️ Por favor, cargue primero la BBDD Pedidos (EKKO.csv) en la parte superior antes de cargar un listado.");
+            event.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // ELIMINAR FILAS VACÍAS
+            const filasExistentes = document.querySelectorAll('#citasTable tbody tr');
+            filasExistentes.forEach(fila => {
+                const inputPed = fila.querySelector('.in-pedido');
+                if (!inputPed || inputPed.value.trim() === "") {
+                    fila.remove();
+                }
+            });
+
+            const lineas = e.target.result.split('\n');
+            
+            lineas.forEach(linea => {
+                const cols = linea.split(',');
+                const pedido = cols[0] ? cols[0].trim().replace(/"/g, '') : ""; 
+                
+                if (!pedido || pedido.toUpperCase() === 'PEDIDO') return; 
+
+                addRow();
+                const tbody = document.querySelector('#citasTable tbody');
+                const tr = tbody.lastElementChild;
+                
+                tr.querySelector('.p1').value = cols[1] ? parseInt(cols[1].trim()) || 0 : 0;
+                tr.querySelector('.p2').value = cols[2] ? parseInt(cols[2].trim()) || 0 : 0;
+                tr.querySelector('.p3').value = cols[3] ? parseInt(cols[3].trim()) || 0 : 0;
+                tr.querySelector('.p4').value = cols[4] ? parseInt(cols[4].trim()) || 0 : 0;
+                tr.querySelector('.p5').value = cols[5] ? parseInt(cols[5].trim()) || 0 : 0;
+                tr.querySelector('.c1').value = cols[6] ? parseInt(cols[6].trim()) || 0 : 0;
+                tr.querySelector('.c2').value = cols[7] ? parseInt(cols[7].trim()) || 0 : 0;
+
+                const inputPedido = tr.querySelector('.in-pedido');
+                inputPedido.value = pedido;
+                
+                autocompletarFila(inputPedido, true);
+            });
+            
+            calculateTotals();
+            event.target.value = ""; 
+        };
+        reader.readAsText(file);
+    }
+
+    function marcarFilaError(tr, mensaje) {
+        tr.classList.add('row-error'); 
+        tr.style.backgroundColor = '#FFCDD2';
+        tr.querySelectorAll('input, select, td.readonly-result').forEach(el => {
+            el.style.backgroundColor = '#FFCDD2';
+        });
+        
+        tr.querySelector('.in-prov-name').value = mensaje;
+        tr.querySelector('.in-prov-name').style.color = "red";
+        tr.querySelector('.in-prov-name').style.fontWeight = "bold";
+        tr.querySelector('.in-prov-num').value = "";
+        tr.querySelector('.in-fecha').value = "";
+        tr.querySelector('.in-tienda').selectedIndex = 0;
+        tr.querySelector('.in-secc').selectedIndex = 0;
+    }
+
+    function autocompletarFila(inputPedido, isBulk = false) {
+        const tr = inputPedido.closest('tr');
+        const pedido = inputPedido.value.trim();
+
+        tr.classList.remove('row-error');
+        tr.style.backgroundColor = '';
+        tr.querySelectorAll('input, select, td.readonly-result').forEach(el => {
+            if(el.classList.contains('in-prov-num') || el.classList.contains('in-prov-name')) {
+                el.style.backgroundColor = '#f4f5f7'; 
+            } else if (el.classList.contains('readonly-result')) {
+                el.style.backgroundColor = 'var(--obramat-grey)';
+            } else {
+                el.style.backgroundColor = '';
+            }
+        });
+        tr.querySelector('.in-prov-name').style.color = "";
+        tr.querySelector('.in-prov-name').style.fontWeight = "normal";
+
+        if (pedido === "") {
+            tr.querySelector('.in-prov-num').value = "";
+            tr.querySelector('.in-prov-name').value = "";
+            tr.querySelector('.in-fecha').value = "";
+            tr.querySelector('.in-tienda').selectedIndex = 0;
+            tr.querySelector('.in-secc').selectedIndex = 0;
+            return; 
+        }
+
+        if (Object.keys(bdPedidos).length === 0) {
+            if(!isBulk) alert("Por favor, cargue primero el archivo BBDD Pedidos (EKKO.csv).");
+            inputPedido.value = "";
+            return;
+        }
+
+        // VALIDACIÓN: LÍNEA DUPLICADA
+        const todosLosPedidos = document.querySelectorAll('.in-pedido');
+        let repeticiones = 0;
+        todosLosPedidos.forEach(input => {
+            if(input.value.trim() === pedido) repeticiones++;
+        });
+
+        if (repeticiones > 1) {
+            if(!isBulk) alert("Línea duplicada: El pedido " + pedido + " ya ha sido introducido en esta solicitud.");
+            marcarFilaError(tr, "LÍNEA DUPLICADA");
+            return;
+        }
+
+        // VALIDACIÓN: EXISTENCIA EN EKKO
+        if (bdPedidos[pedido]) {
+            const datos = bdPedidos[pedido];
+            
+            tr.querySelector('.in-prov-num').value = datos.numProv;
+            tr.querySelector('.in-prov-name').value = datos.nombreProv;
+            tr.querySelector('.in-fecha').value = datos.fecha;
+
+            const selectTienda = tr.querySelector('.in-tienda');
+            for (let i = 0; i < selectTienda.options.length; i++) {
+                const val = selectTienda.options[i].value;
+                if (val !== "" && (val.toUpperCase().includes(datos.tienda.toUpperCase()) || datos.tienda.toUpperCase().includes(val.toUpperCase()))) {
+                    selectTienda.selectedIndex = i;
+                    break;
+                }
+            }
+
+            const selectSecc = tr.querySelector('.in-secc');
+            for (let i = 0; i < selectSecc.options.length; i++) {
+                const val = selectSecc.options[i].value;
+                if (val !== "" && (val.toUpperCase() === datos.seccion.toUpperCase() || 
+                    val.toUpperCase().includes(datos.seccion.toUpperCase()) ||
+                    datos.seccion.toUpperCase().includes(val.toUpperCase()))) {
+                    selectSecc.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            if(!isBulk) {
+                inputPedido.style.backgroundColor = '#d4edda';
+                setTimeout(() => inputPedido.style.backgroundColor = '', 1000);
+            }
+            
+        } else {
+            if (!isBulk) alert("Error: El pedido tecleado no pertenece a Obramat (No encontrado en EKKO).");
+            marcarFilaError(tr, "PEDIDO INEXISTENTE");
+        }
+    }
+
+    const almacenes = ["012 Usera", "011 Majadahonda", "007 Rivas"];
+    const secciones = ["HERRAMIENTAS", "ELECTRICIDAD", "SANITARIO", "MADERA", "FONTANERIA", "PINTURA", "MATERIALES", "FERRETERIA", "CERAMICA"];
+
+    function calculateTotals() {
+        let grandTotalPalets = 0;
+        let grandTotalBultos = 0;
+
+        const rows = document.querySelectorAll('#citasTable tbody tr');
+        
+        rows.forEach(row => {
+            const p1 = parseFloat(row.querySelector('.p1').value) || 0;
+            const p2 = parseFloat(row.querySelector('.p2').value) || 0;
+            const p3 = parseFloat(row.querySelector('.p3').value) || 0;
+            const p4 = parseFloat(row.querySelector('.p4').value) || 0;
+            const p5 = parseFloat(row.querySelector('.p5').value) || 0;
+            const c1 = parseFloat(row.querySelector('.c1').value) || 0;
+            const c2 = parseFloat(row.querySelector('.c2').value) || 0;
+
+            const totalPaletsRow = (p1 * 0.5) + (p2 * 1) + (p3 * 2) + (p4 * 2.5) + (p5 * 1);
+            const totalBultosRow = (c1 * 0.1) + (c2 * 0.3);
+
+            row.querySelector('.res-palets').innerText = totalPaletsRow.toFixed(2);
+            row.querySelector('.res-bultos').innerText = totalBultosRow.toFixed(2);
+
+            grandTotalPalets += totalPaletsRow;
+            grandTotalBultos += totalBultosRow;
+        });
+
+        document.getElementById('grandTotalPalets').innerText = grandTotalPalets.toFixed(2);
+        document.getElementById('grandTotalBultos').innerText = grandTotalBultos.toFixed(2);
+    }
+
+    function addRow() {
+        const tbody = document.querySelector('#citasTable tbody');
+        const tr = document.createElement('tr');
+
+        let optionsHTMLAlmacenes = '<option value="">Sel...</option>';
+        almacenes.forEach(alma => {
+            optionsHTMLAlmacenes += `<option value="${alma}">${alma}</option>`;
+        });
+
+        let optionsHTMLSecciones = '<option value="">Seleccione...</option>';
+        secciones.forEach(secc => {
+            optionsHTMLSecciones += `<option value="${secc}">${secc}</option>`;
+        });
+
+        tr.innerHTML = `
+            <td><input type="text" class="in-pedido" placeholder="Nº..." onchange="autocompletarFila(this)" style="font-weight:bold; border:2px solid var(--obramat-yellow);"></td>
+            <td><input type="text" class="in-prov-num" readonly style="background:#f4f5f7"></td>
+            <td><input type="text" class="in-prov-name" readonly style="background:#f4f5f7"></td>
+            <td><select class="in-secc">${optionsHTMLSecciones}</select></td>
+            <td><select class="in-tienda">${optionsHTMLAlmacenes}</select></td>
+            <td><input type="text" class="in-fecha" placeholder="DD/MM/YY"></td>
+            <td><input type="number" class="p1 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="p2 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="p3 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="p4 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="p5 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="c1 calc-input" min="0" step="1" value="0"></td>
+            <td><input type="number" class="c2 calc-input" min="0" step="1" value="0"></td>
+            <td class="readonly-result res-palets">0.00</td>
+            <td class="readonly-result res-bultos">0.00</td>
+            <td><button class="btn-danger" onclick="deleteRow(this)" title="Eliminar fila">✖</button></td>
+        `;
+        
+        tbody.appendChild(tr);
+
+        const inputs = tr.querySelectorAll('.calc-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateTotals);
+        });
+    }
+
+    function deleteRow(btn) {
+        const row = btn.closest('tr');
+        row.remove();
+        calculateTotals();
+    }
+
+    function openModal() {
+        const errores = document.querySelectorAll('.row-error');
+        if (errores.length > 0) {
+            alert("Existen errores de tecleo (pedidos duplicados o inexistentes).\n\nPor favor, corrija o elimine las líneas en color rojo antes de enviar la propuesta.");
+            return;
+        }
+
+        let hayPedidos = false;
+        document.querySelectorAll('.in-pedido').forEach(input => {
+            if (input.value.trim() !== "") hayPedidos = true;
+        });
+
+        if (!hayPedidos) {
+            alert("Debe incluir al menos un pedido válido para solicitar la cita.");
+            return;
+        }
+
+        document.getElementById('validationModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('validationModal').classList.remove('active');
+    }
+
+    function submitData() {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        
+        const ref = pad(now.getDate()) + 
+                    pad(now.getMonth() + 1) + 
+                    now.getFullYear() + 
+                    pad(now.getHours()) + 
+                    pad(now.getMinutes()) + 
+                    pad(now.getSeconds());
+
+        alert("Propuesta enviada correctamente.\n\nNÚMERO DE REFERENCIA: " + ref);
+        closeModal();
+        window.location.href = "index.html"; 
+    }
+
+    window.onload = function() {
+        addRow(); 
+    };
+</script>
+
+</body>
+</html>

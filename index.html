@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obramat - Portal Logístico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obramat-yellow: #FFCC00;
+            --obramat-dark: #1A1C1E;
+            --obramat-grey: #F4F5F7;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--obramat-grey);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background-color: var(--obramat-dark);
+            color: white;
+            padding: 20px 40px;
+            border-bottom: 5px solid var(--obramat-yellow);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(rgba(244,245,247,0.9), rgba(244,245,247,0.9)), url('https://www.obramat.es/media/wysiwyg/home/background-obramat.jpg');
+            background-size: cover;
+        }
+
+        h1 {
+            color: var(--obramat-dark);
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 40px;
+        }
+
+        .menu-container {
+            display: flex;
+            gap: 30px;
+            max-width: 900px;
+        }
+
+        .menu-card {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 300px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            border-bottom: 5px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--obramat-yellow);
+        }
+
+        .menu-card h3 {
+            font-weight: 900;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .btn-portal {
+            display: inline-block;
+            background-color: var(--obramat-yellow);
+            color: var(--obramat-dark);
+            padding: 15px 25px;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .menu-card:nth-child(2) .btn-portal {
+            background-color: var(--obramat-dark);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">OBRAMAT</div>
+</nav>
+
+<div class="hero">
+    <h1>PORTAL CITAS DE TRANSITOS</h1>
+    <p>Seleccione la gestión que desea realizar</p>
+
+    <div class="menu-container">
+        <a href="Gestionar_Citas.html" class="menu-card">
+            <h3>Solicitar Cita</h3>
+            <p>Inicie una nueva petición de entrega para el Centro Logístico.</p>
+            <div class="btn-portal">Acceder</div>
+        </a>
+
+        <a href="Gestionar_Propuestas.html" class="menu-card">
+            <h3>Gestionar Propuestas</h3>
+            <p>Consulte el estado de las citas, valide peticiones y asigne horarios.</p>
+            <div class="btn-portal">Acceder</div>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
