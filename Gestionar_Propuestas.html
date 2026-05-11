@@ -123,7 +123,7 @@
             table-layout: fixed;
         }
 
-        .calendar-table th {
+        .calendar-table th.day-col {
             background-color: var(--obramat-grey);
             color: var(--obramat-dark);
             padding: 12px 5px;
@@ -132,13 +132,15 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            width: 20%; 
         }
 
+        /* Celdas fijadas a 110px para que entren exactamente 2 propuestas minimizadas */
         .calendar-table td {
             border: 1px solid var(--border-color);
-            height: 60px;
+            height: 110px;
             vertical-align: top;
-            padding: 4px;
+            padding: 6px;
         }
 
         .time-col {
@@ -149,11 +151,19 @@
             text-align: center;
             vertical-align: middle !important;
             font-size: 0.8em;
+            border-bottom: 1px solid var(--border-color);
         }
 
+        /* Zona de soltar (Slot) */
         .drop-zone {
             background-color: var(--white);
             transition: background-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+            box-sizing: border-box;
+            justify-content: flex-start;
         }
 
         .drop-zone.drag-over {
@@ -202,8 +212,10 @@
             margin-bottom: 12px;
             cursor: grab;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, padding 0.2s;
             border-left: 4px solid var(--obramat-yellow);
+            display: flex;
+            flex-direction: column;
         }
 
         .proposal-card:active {
@@ -220,6 +232,8 @@
             margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
         }
 
         .proposal-card .prov-name {
@@ -227,6 +241,7 @@
             color: var(--text-muted);
             margin-bottom: 10px;
             font-weight: 600;
+            pointer-events: none;
         }
 
         .proposal-card .actions {
@@ -253,25 +268,32 @@
         .btn-cancelar { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
         .btn-cancelar:hover { background: var(--danger); color: white; }
 
-        /* Estilo de la tarjeta cuando está soltada en el calendario */
+        /* Estilo de la tarjeta MINIMIZADA en el calendario */
         .proposal-card.placed {
             margin-bottom: 0;
-            padding: 6px 8px;
+            padding: 8px 10px;
             border-left-color: var(--success);
             background-color: #E8F5E9;
-            height: 100%;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            flex-direction: row;
             justify-content: space-between;
+            align-items: center;
+            height: auto;
         }
 
-        .proposal-card.placed .actions { display: none; }
+        .proposal-card.placed .ref-header {
+            font-size: 0.9em;
+            margin-bottom: 0;
+        }
+        
+        .proposal-card.placed .ref-header span:last-child { display: none; }
+        .proposal-card.placed .prov-name { display: none; }
+        .proposal-card.placed .actions { display: none; } 
         
         .proposal-card.placed .placed-actions {
             display: flex;
             justify-content: space-between;
-            margin-top: 5px;
+            gap: 12px;
+            margin-top: 0;
         }
 
         .btn-icon {
@@ -282,7 +304,7 @@
             padding: 0;
             color: var(--text-muted);
         }
-        .btn-icon:hover { color: var(--obramat-dark); transform: scale(1.1); }
+        .btn-icon:hover { color: var(--obramat-dark); transform: scale(1.2); }
 
         /* Modales */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
@@ -313,13 +335,13 @@
 <div class="layout-wrapper">
     <div class="calendar-panel">
         <div class="calendar-header" id="calendarWeekLabel">
-            Semana Actual
+            Semana Actual (Lunes a Viernes)
         </div>
         <div class="calendar-wrapper">
             <table class="calendar-table" id="calendarTable">
                 <thead>
                     <tr id="calendarDaysHeader">
-                        <th class="time-col">Hora</th>
+                        <th class="time-col" style="position: sticky; left: 0; z-index: 11;">Hora</th>
                         </tr>
                 </thead>
                 <tbody id="calendarBody">
@@ -355,8 +377,7 @@
     const almacenes = ["012 Usera", "011 Majadahonda", "007 Rivas"];
 
     function initData() {
-        for(let i = 1; i <= 15; i++) {
-            // Generar un número aleatorio de pedidos para esta propuesta (entre 2 y 6 pedidos)
+        for(let i = 1; i <= 25; i++) {
             const numPedidos = Math.floor(Math.random() * 5) + 2; 
             const pedidosGenerados = [];
 
@@ -383,42 +404,45 @@
         }
     }
 
-    // --- RENDERIZAR INTERFAZ ---
+    // --- RENDERIZAR INTERFAZ DEL CALENDARIO ---
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
     
     function renderCalendar() {
         const headerTr = document.getElementById('calendarDaysHeader');
+        
+        // Renderizar las 5 columnas de los días
         diasSemana.forEach((dia) => {
             const th = document.createElement('th');
             th.innerText = dia;
+            th.className = 'day-col';
             headerTr.appendChild(th);
         });
 
         const tbody = document.getElementById('calendarBody');
+        
+        // Renderizar filas SOLO por horas enteras (07:00 a 16:00) => 1 fila = 1 hora
         for (let h = 7; h <= 16; h++) {
-            ['00', '30'].forEach(m => {
-                if (h === 16 && m === '30') return; 
-                const timeStr = `${String(h).padStart(2, '0')}:${m}`;
-                
-                const tr = document.createElement('tr');
-                const tdTime = document.createElement('td');
-                tdTime.className = 'time-col';
-                tdTime.innerText = timeStr;
-                tr.appendChild(tdTime);
+            const timeStr = `${String(h).padStart(2, '0')}:00`;
+            
+            const tr = document.createElement('tr');
+            const tdTime = document.createElement('td');
+            tdTime.className = 'time-col';
+            tdTime.innerText = timeStr;
+            tr.appendChild(tdTime);
 
-                diasSemana.forEach((dia, index) => {
-                    const td = document.createElement('td');
-                    td.className = 'drop-zone';
-                    td.id = `slot-${index}-${timeStr}`; 
-                    td.ondragover = allowDrop;
-                    td.ondragenter = dragEnter;
-                    td.ondragleave = dragLeave;
-                    td.ondrop = drop;
-                    tr.appendChild(td);
-                });
-
-                tbody.appendChild(tr);
+            // Crear los slots interactivos para cada día (max 2 propuestas por slot)
+            diasSemana.forEach((dia, index) => {
+                const td = document.createElement('td');
+                td.className = 'drop-zone';
+                td.id = `slot-${index}-${timeStr}`; // ID específico para este día y hora
+                td.ondragover = allowDrop;
+                td.ondragenter = dragEnter;
+                td.ondragleave = dragLeave;
+                td.ondrop = drop;
+                tr.appendChild(td);
             });
+
+            tbody.appendChild(tr);
         }
     }
 
@@ -434,7 +458,6 @@
             card.draggable = true;
             card.ondragstart = drag;
 
-            // Contar rápidamente cuántos pedidos tiene para mostrarlo en la tarjeta
             const totalPed = item.pedidos.length;
 
             card.innerHTML = `
@@ -458,7 +481,7 @@
         });
     }
 
-    // --- LÓGICA DE DRAG & DROP ---
+    // --- LÓGICA DE DRAG & DROP BLINDADA ---
     function drag(ev) {
         ev.dataTransfer.setData("text", ev.currentTarget.id);
         ev.currentTarget.style.opacity = "0.5";
@@ -470,34 +493,51 @@
 
     function dragEnter(ev) {
         ev.preventDefault();
-        if(ev.currentTarget.classList.contains('drop-zone')) {
-            ev.currentTarget.classList.add('drag-over');
+        const dropZone = ev.target.closest('.drop-zone') || ev.target.closest('.sidebar-list');
+        if(dropZone && dropZone.classList.contains('drop-zone')) {
+            dropZone.classList.add('drag-over');
         }
     }
 
     function dragLeave(ev) {
-        ev.currentTarget.classList.remove('drag-over');
+        const dropZone = ev.target.closest('.drop-zone');
+        if(dropZone) {
+            dropZone.classList.remove('drag-over');
+        }
     }
 
     function drop(ev) {
         ev.preventDefault();
-        ev.currentTarget.classList.remove('drag-over');
         
-        const data = ev.dataTransfer.getData("text");
-        const el = document.getElementById(data);
-        el.style.opacity = "1";
+        // Identificar la celda exacta donde hemos soltado la tarjeta
+        const dropZone = ev.target.closest('.drop-zone');
+        
+        if(dropZone) {
+            dropZone.classList.remove('drag-over');
+            
+            const data = ev.dataTransfer.getData("text");
+            const el = document.getElementById(data);
+            if(!el) return;
 
-        if(ev.currentTarget.classList.contains('drop-zone')) {
-            if(ev.currentTarget.childElementCount > 0) {
-                alert("Este slot horario ya está ocupado.");
+            el.style.opacity = "1";
+
+            // Contar cuántas propuestas (tarjetas) hay ya en este slot específico
+            const currentCards = dropZone.querySelectorAll('.proposal-card').length;
+            const isAlreadyHere = el.parentElement === dropZone;
+
+            // VALIDACIÓN ESTRICTA: LÍMITE DE 2 PROPUESTAS POR CELDA (1 hora completa)
+            if(!isAlreadyHere && currentCards >= 2) {
+                alert("Esta franja de 1 hora ya está llena (Máximo 2 propuestas por celda).");
                 return;
             }
 
+            // Minimizar tarjeta al soltarla
             el.classList.add('placed');
             el.querySelector('.actions').style.display = 'none';
+            el.querySelector('.prov-name').style.display = 'none';
             el.querySelector('.placed-actions').style.display = 'flex';
             
-            ev.currentTarget.appendChild(el);
+            dropZone.appendChild(el);
             actualizarContadorSidebar();
         }
     }
@@ -511,10 +551,13 @@
     function devolverSidebar(refId) {
         const el = document.getElementById(refId);
         if(el) {
+            // Restaurar la tarjeta a su estado completo
             el.classList.remove('placed');
             el.style.opacity = "1";
             el.querySelector('.actions').style.display = 'flex';
+            el.querySelector('.prov-name').style.display = 'block';
             el.querySelector('.placed-actions').style.display = 'none';
+            
             document.getElementById('pendingList').appendChild(el);
             actualizarContadorSidebar();
         }
@@ -543,7 +586,6 @@
         document.getElementById('modalRef').innerText = ref;
         let tB = 0, tP = 0;
         
-        // Tabla con todos los soportes
         let h = `<table class="detalle-table">
             <thead>
                 <tr>
