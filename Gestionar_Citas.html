@@ -50,7 +50,7 @@
 
         .table-responsive { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 6px; }
         
-        /* Ajustes de Tabla para fuentes pequeñas y sin scroll */
+        /* Ajustes de Tabla */
         table.data-table { width: 100%; border-collapse: collapse; font-size: 0.75em; white-space: nowrap; }
         .data-table th, .data-table td { padding: 6px 4px; text-align: center; border-bottom: 1px solid var(--border-color); }
         .data-table th { background-color: var(--obramat-grey); color: var(--obramat-dark); font-weight: 700; text-transform: uppercase; font-size: 0.85em; position: sticky; top: 0; border-bottom: 2px solid var(--border-color); }
@@ -84,8 +84,13 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--white); padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 4px 25px rgba(0,0,0,0.2); max-width: 450px; width: 90%; }
-        .modal-content h3 { margin-top: 0; color: var(--obramat-dark); font-size: 18px; }
-        .modal-content p { color: var(--text-muted); margin-bottom: 25px; font-size: 14px; }
+        .modal-content h3 { margin-top: 0; color: var(--obramat-dark); font-size: 18px; text-transform: uppercase; }
+        .modal-content p { color: var(--text-muted); margin-bottom: 15px; font-size: 14px; }
+        
+        .hora-select-container { margin-bottom: 25px; }
+        .hora-select-container select { width: 100%; max-width: 200px; padding: 10px; font-size: 16px; border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Montserrat', sans-serif; font-weight: 600; text-align: center; }
+        .hora-select-container select:focus { outline: none; border-color: var(--obramat-yellow); box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2); }
+        
         .modal-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
     </style>
 </head>
@@ -180,7 +185,7 @@
         
         <div style="flex-grow: 1;"></div>
         
-        <button class="btn btn-dark" onclick="openModal()">Enviar para validar</button>
+        <button class="btn btn-dark" onclick="openModal()">Enviar Propuesta</button>
     </div>
 
 </div>
@@ -188,9 +193,26 @@
 <div id="validationModal" class="modal-overlay">
     <div class="modal-content">
         <h3>Confirmación de Envío</h3>
-        <p>¿Seguro que quiere enviar para validar?</p>
+        <p>¿A qué hora prefiere descargar la mercancía?</p>
+        
+        <div class="hora-select-container">
+            <select id="horaPreferida">
+                <option value="">Seleccione hora...</option>
+                <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+            </select>
+        </div>
+
         <div class="modal-buttons">
-            <button class="btn" onclick="submitData()">Enviar</button>
+            <button class="btn" onclick="submitData()">Confirmar Cita</button>
             <button class="btn btn-outline" onclick="closeModal()">Volver a editar</button>
         </div>
     </div>
@@ -473,6 +495,7 @@
         calculateTotals();
     }
 
+    // --- VALIDACIÓN Y ENVÍO DE FORMULARIO MODIFICADO ---
     function openModal() {
         const errores = document.querySelectorAll('.row-error');
         if (errores.length > 0) {
@@ -490,6 +513,8 @@
             return;
         }
 
+        // Limpiar el selector de hora al abrir el modal
+        document.getElementById('horaPreferida').value = "";
         document.getElementById('validationModal').classList.add('active');
     }
 
@@ -498,6 +523,13 @@
     }
 
     function submitData() {
+        // Validar que se ha seleccionado una hora
+        const horaSeleccionada = document.getElementById('horaPreferida').value;
+        if (!horaSeleccionada) {
+            alert("⚠️ Por favor, seleccione una hora preferida para descargar la mercancía antes de confirmar.");
+            return;
+        }
+
         const now = new Date();
         const pad = (n) => n.toString().padStart(2, '0');
         
@@ -508,7 +540,7 @@
                     pad(now.getMinutes()) + 
                     pad(now.getSeconds());
 
-        alert("Propuesta enviada correctamente.\n\nNÚMERO DE REFERENCIA: " + ref);
+        alert(`¡Propuesta enviada correctamente!\n\nHora solicitada por el proveedor: ${horaSeleccionada}\nNÚMERO DE REFERENCIA: ${ref}`);
         closeModal();
         window.location.href = "index.html"; 
     }
