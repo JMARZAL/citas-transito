@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obramat - Gestión de Propuestas</title>
+    <title>Obramat - Gestión de Propuestas (Calendario)</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,6 +25,10 @@
             margin: 0;
             padding: 0;
             color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
         }
 
         /* Cabecera Corporativa */
@@ -36,6 +40,7 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 5px solid var(--obramat-yellow);
+            flex-shrink: 0;
         }
 
         .navbar-brand {
@@ -46,23 +51,16 @@
             letter-spacing: 1px;
         }
 
-        /* Contenedor Principal */
-        .container {
-            max-width: 95%;
-            margin: 30px auto;
-            background: var(--white);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
         .section-header {
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--obramat-grey);
-            padding-bottom: 15px;
+            padding: 15px 40px;
+            background: var(--white);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
         }
 
-        /* Botón Volver */
         .back-link {
             text-decoration: none;
             color: var(--text-muted);
@@ -71,7 +69,7 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             transition: color 0.2s;
         }
         .back-link:hover { color: var(--obramat-dark); }
@@ -80,305 +78,531 @@
             margin: 0;
             font-weight: 900;
             color: var(--obramat-dark);
-            font-size: 22px;
+            font-size: 20px;
             text-transform: uppercase;
         }
 
-        /* Filtros */
-        .filters-container {
+        /* Layout Principal */
+        .layout-wrapper {
             display: flex;
-            gap: 25px;
-            margin-bottom: 25px;
-            background-color: var(--obramat-grey);
-            padding: 15px 20px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
+            flex: 1;
+            overflow: hidden;
+            padding: 15px;
+            gap: 15px;
         }
 
-        .filter-group {
+        /* Panel Izquierdo: Calendario */
+        .calendar-panel {
+            flex: 3;
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 0.85em;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .filter-group select {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-family: 'Montserrat';
+        .calendar-header {
+            padding: 15px;
+            background-color: var(--obramat-dark);
+            color: var(--white);
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
         }
 
-        /* Tabla */
-        .table-responsive { overflow-x: auto; min-height: 400px; }
+        .calendar-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
 
-        table.propuestas-table {
+        table.calendar-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .calendar-table th {
+            background-color: var(--obramat-grey);
+            color: var(--obramat-dark);
+            padding: 12px 5px;
             font-size: 0.85em;
-        }
-
-        .propuestas-table th {
-            background-color: var(--obramat-dark);
-            color: white;
-            padding: 15px 10px;
-            text-transform: uppercase;
-            text-align: center;
-        }
-
-        .propuestas-table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        /* Paginación */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .page-btn {
-            padding: 8px 16px;
             border: 1px solid var(--border-color);
-            background: white;
-            cursor: pointer;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .calendar-table td {
+            border: 1px solid var(--border-color);
+            height: 60px;
+            vertical-align: top;
+            padding: 4px;
+        }
+
+        .time-col {
+            width: 70px;
+            background-color: #FAFAFA;
             font-weight: 700;
-            border-radius: 4px;
+            color: var(--text-muted);
+            text-align: center;
+            vertical-align: middle !important;
+            font-size: 0.8em;
         }
 
-        .page-btn:hover { background-color: var(--obramat-grey); }
+        .drop-zone {
+            background-color: var(--white);
+            transition: background-color 0.2s;
+        }
 
-        .page-btn.active {
+        .drop-zone.drag-over {
+            background-color: #E3F2FD;
+            border: 2px dashed #2196F3;
+        }
+
+        /* Panel Derecho: Lista de Propuestas */
+        .sidebar-panel {
+            flex: 1;
+            min-width: 320px;
+            max-width: 400px;
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 15px;
             background-color: var(--obramat-yellow);
-            border-color: var(--obramat-yellow);
+            color: var(--obramat-dark);
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* Badges */
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: 700; text-transform: uppercase; display: inline-block; }
-        .status-pending { background: #FFF3E0; color: var(--pending); border: 1px solid #FFE0B2; }
-        .status-validated { background: #E8F5E9; color: var(--success); border: 1px solid #C8E6C9; }
-        .status-cancelled { background: #FFEBEE; color: var(--danger); border: 1px solid #FFCDD2; }
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #F9FAFC;
+        }
 
-        /* Botones */
-        .btn-action { padding: 8px 12px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; border: none; font-size: 0.75em; }
-        .btn-validate { background: var(--obramat-yellow); color: var(--obramat-dark); margin-right: 5px; }
-        .btn-validate:hover { background-color: #E6B800; }
-        .btn-cancel { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-        .btn-cancel:hover { background-color: var(--danger); color: white; }
-        .btn-detail { background: var(--obramat-grey); border: 1px solid #CCC; padding: 6px 10px; font-weight: 600; cursor: pointer; }
-        .btn-detail:hover { background-color: #E2E8F0; }
+        /* Tarjetas Arrastrables (Propuestas) */
+        .proposal-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: grab;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid var(--obramat-yellow);
+        }
+
+        .proposal-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .proposal-card .ref-header {
+            font-family: monospace;
+            font-weight: 900;
+            color: var(--obramat-dark);
+            font-size: 1.05em;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .proposal-card .prov-name {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .proposal-card .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-card {
+            flex: 1;
+            padding: 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.7em;
+            cursor: pointer;
+            text-transform: uppercase;
+            border: none;
+            transition: 0.2s;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-detalle { background: var(--obramat-grey); color: var(--obramat-dark); border: 1px solid #CCC; }
+        .btn-detalle:hover { background: #E2E8F0; }
+        
+        .btn-cancelar { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-cancelar:hover { background: var(--danger); color: white; }
+
+        /* Estilo de la tarjeta cuando está soltada en el calendario */
+        .proposal-card.placed {
+            margin-bottom: 0;
+            padding: 6px 8px;
+            border-left-color: var(--success);
+            background-color: #E8F5E9;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .proposal-card.placed .actions { display: none; }
+        
+        .proposal-card.placed .placed-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 0;
+            color: var(--text-muted);
+        }
+        .btn-icon:hover { color: var(--obramat-dark); transform: scale(1.1); }
 
         /* Modales */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 850px; text-align: center; }
-        
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 95%; max-width: 800px; text-align: center; }
         .detalle-table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin: 20px 0; }
         .detalle-table th { background: var(--obramat-grey); padding: 10px; border: 1px solid var(--border-color); }
         .detalle-table td { padding: 8px; border: 1px solid var(--border-color); }
-
         .sumatorio-box { background: #E8F5E9; padding: 15px; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; }
-        
-        .select-horario { padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); font-family: 'Montserrat'; }
+        .btn-close-modal { background: var(--obramat-dark); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-family: 'Montserrat'; font-weight: 700;}
+
     </style>
 </head>
 <body>
 
 <nav class="navbar">
     <a href="index.html" class="navbar-brand">OBRAMAT</a>
-    <div style="font-size: 0.8em;">Logística Azuqueca - Gestión de Propuestas</div>
+    <div style="font-size: 0.8em; font-weight: 600;">Centro Logístico - Planificación Semanal</div>
 </nav>
 
-<div class="container">
-    <div class="section-header">
+<div class="section-header">
+    <div class="header-title-group">
         <a href="index.html" class="back-link">← Volver al Menú Principal</a>
-        <h2>Gestión de Propuestas Recibidas</h2>
+        <h2>Planificador de Citas Logísticas</h2>
     </div>
+</div>
 
-    <div class="filters-container">
-        <div class="filter-group">
-            <label>Estado:</label>
-            <select id="filterEstado" onchange="resetAndRender()">
-                <option value="Todos">Todos</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Validada">Validada</option>
-                <option value="Cancelada">Cancelada</option>
-            </select>
+<div class="layout-wrapper">
+    <div class="calendar-panel">
+        <div class="calendar-header" id="calendarWeekLabel">
+            Semana Actual
         </div>
-        <div class="filter-group">
-            <label>Fecha Entrega:</label>
-            <select id="filterFecha" onchange="resetAndRender()">
-                <option value="Todas">Todas las fechas</option>
-            </select>
+        <div class="calendar-wrapper">
+            <table class="calendar-table" id="calendarTable">
+                <thead>
+                    <tr id="calendarDaysHeader">
+                        <th class="time-col">Hora</th>
+                        </tr>
+                </thead>
+                <tbody id="calendarBody">
+                    </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="propuestas-table">
-            <thead>
-                <tr>
-                    <th>Ref. Propuesta</th>
-                    <th>Proveedor</th>
-                    <th>Detalle Soportes</th>
-                    <th>Estado</th>
-                    <th>Fecha Entrega</th>
-                    <th>Franja Horaria</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="mainTbody"></tbody>
-        </table>
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <span>Pendientes de Asignar</span>
+            <span id="pendingCount" style="background: white; color: var(--obramat-dark); padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">0</span>
+        </div>
+        <div class="sidebar-list" id="pendingList" ondragover="allowDrop(event)" ondrop="dropToSidebar(event)">
+            </div>
     </div>
-
-    <div class="pagination" id="paginationControls"></div>
 </div>
 
 <div id="modalDetalle" class="modal-overlay">
     <div class="modal-content">
         <h3>Desglose de Propuesta <span id="modalRef" style="color:var(--danger)"></span></h3>
-        <div id="modalTableContainer"></div>
+        <div id="modalTableContainer" style="max-height: 50vh; overflow-y: auto;"></div>
         <div class="sumatorio-box" id="modalSumatorio"></div>
-        <button class="btn-action btn-validate" style="margin-top:20px;" onclick="cerrarDetalles()">Cerrar</button>
+        <button class="btn-close-modal" style="margin-top:20px;" onclick="cerrarDetalles()">Cerrar Detalle</button>
     </div>
 </div>
 
 <script>
-    let rawData = [];
-    let currentPage = 1;
-    const pageSize = 20;
+    // --- DATOS SIMULADOS ---
+    let propuestasPendientes = [];
+    const proveedores = ["ROCA SANITARIO", "CEYS SL", "BOSCH TOOLS", "MAKITA ESPAÑA", "FISCHER DAREX", "CERAMICAS GALA", "PINTURAS MONTO"];
+    const secciones = ["HERRAMIENTAS", "ELECTRICIDAD", "SANITARIO", "MADERA", "FONTANERIA", "PINTURA", "MATERIALES", "FERRETERIA", "CERAMICA"];
+    const almacenes = ["012 Usera", "011 Majadahonda", "007 Rivas"];
 
-    // Generar fechas laborales próximas para simulación
-    function getDates() {
-        const dates = [];
-        let d = new Date();
-        while(dates.length < 10) {
-            if(d.getDay() !== 0 && d.getDay() !== 6) dates.push(d.toLocaleDateString('es-ES'));
-            d.setDate(d.getDate() + 1);
-        }
-        return dates;
-    }
+    function initData() {
+        for(let i = 1; i <= 15; i++) {
+            // Generar un número aleatorio de pedidos para esta propuesta (entre 2 y 6 pedidos)
+            const numPedidos = Math.floor(Math.random() * 5) + 2; 
+            const pedidosGenerados = [];
 
-    const proximasFechas = getDates();
+            for(let j = 0; j < numPedidos; j++) {
+                pedidosGenerados.push({
+                    id: "1804" + i + "0" + j,
+                    sec: secciones[Math.floor(Math.random() * secciones.length)],
+                    alm: almacenes[Math.floor(Math.random() * almacenes.length)],
+                    c1: Math.floor(Math.random() * 4), 
+                    c2: Math.floor(Math.random() * 2), 
+                    p1: Math.floor(Math.random() * 2), 
+                    p2: Math.floor(Math.random() * 3), 
+                    p3: Math.floor(Math.random() * 2), 
+                    p4: 0, 
+                    p5: 0
+                });
+            }
 
-    function init() {
-        const fSelect = document.getElementById('filterFecha');
-        proximasFechas.forEach(f => fSelect.innerHTML += `<option value="${f}">${f}</option>`);
-
-        // Crear 60 registros de prueba
-        for(let i=1; i<=60; i++) {
-            rawData.push({
-                ref: `REF-${2026000 + i}`,
-                prov: ["ROCA SANITARIO", "CEYS SL", "BOSCH TOOLS", "MAKITA ESPAÑA", "FISCHER DAREX"][i % 5] + " " + i,
-                estado: "Pendiente",
-                fecha: proximasFechas[i % proximasFechas.length],
-                horario: "",
-                pedidos: [
-                    { id: "1800" + i, sec: "SANITARIO", alm: "012 Usera", c1: Math.floor(Math.random()*5), c2: 1, p1: 1, p2: 0, p3: 0, p4: 0, p5: 0 },
-                    { id: "1900" + i, sec: "SANITARIO", alm: "012 Usera", c1: 0, c2: 0, p1: 0, p2: 2, p3: 0, p4: 0, p5: 1 }
-                ]
+            propuestasPendientes.push({
+                ref: `REF-${2026100 + i}`,
+                prov: proveedores[i % proveedores.length],
+                pedidos: pedidosGenerados
             });
         }
-        render();
     }
 
-    function render() {
-        const est = document.getElementById('filterEstado').value;
-        const fec = document.getElementById('filterFecha').value;
-        
-        const filtered = rawData.filter(d => (est === "Todos" || d.estado === est) && (fec === "Todas" || d.fecha === fec));
-        const totalPages = Math.ceil(filtered.length / pageSize);
-        const data = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-        const tbody = document.getElementById('mainTbody');
-        tbody.innerHTML = '';
-
-        if(data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="padding:40px; color:#666; font-style:italic;">No hay resultados con estos filtros.</td></tr>';
-            document.getElementById('paginationControls').innerHTML = '';
-            return;
-        }
-
-        data.forEach(item => {
-            const isPending = item.estado === "Pendiente";
-            tbody.innerHTML += `
-                <tr>
-                    <td><span style="font-family:monospace; font-weight:700; background:#eee; padding:3px 6px; border-radius:4px;">${item.ref}</span></td>
-                    <td><strong>${item.prov}</strong></td>
-                    <td><button class="btn-detail" onclick="verDetalle('${item.ref}')">🔍 Ver Detalle</button></td>
-                    <td><span class="status-badge status-${item.estado.toLowerCase().replace('á','a')}">${item.estado}</span></td>
-                    <td>${item.fecha}</td>
-                    <td>
-                        ${isPending ? `<select class="select-horario" onchange="rawData.find(x=>x.ref==='${item.ref}').horario=this.value">
-                            <option value="">Sel...</option>
-                            ${generarHoras(item.horario)}
-                        </select>` : `<strong>${item.horario || '--'}</strong>`}
-                    </td>
-                    <td>
-                        ${isPending ? `
-                            <button class="btn-action btn-validate" onclick="validar('${item.ref}')">Validar</button>
-                            <button class="btn-action btn-cancel" onclick="cancelar('${item.ref}')">Cancelar</button>
-                        ` : `<span style="color:${item.estado === 'Validada' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${item.estado === 'Validada' ? '✓ CONFIRMADA' : '✗ RECHAZADA'}</span>`}
-                    </td>
-                </tr>
-            `;
+    // --- RENDERIZAR INTERFAZ ---
+    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+    
+    function renderCalendar() {
+        const headerTr = document.getElementById('calendarDaysHeader');
+        diasSemana.forEach((dia) => {
+            const th = document.createElement('th');
+            th.innerText = dia;
+            headerTr.appendChild(th);
         });
-        renderPagination(totalPages);
-    }
 
-    function generarHoras(sel) {
-        let h = '';
-        for(let i=7; i<=15; i++) {
-            [`${i}:00`, `${i}:30`].forEach(t => h += `<option value="${t}" ${sel===t?'selected':''}>${t}</option>`);
+        const tbody = document.getElementById('calendarBody');
+        for (let h = 7; h <= 16; h++) {
+            ['00', '30'].forEach(m => {
+                if (h === 16 && m === '30') return; 
+                const timeStr = `${String(h).padStart(2, '0')}:${m}`;
+                
+                const tr = document.createElement('tr');
+                const tdTime = document.createElement('td');
+                tdTime.className = 'time-col';
+                tdTime.innerText = timeStr;
+                tr.appendChild(tdTime);
+
+                diasSemana.forEach((dia, index) => {
+                    const td = document.createElement('td');
+                    td.className = 'drop-zone';
+                    td.id = `slot-${index}-${timeStr}`; 
+                    td.ondragover = allowDrop;
+                    td.ondragenter = dragEnter;
+                    td.ondragleave = dragLeave;
+                    td.ondrop = drop;
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
         }
-        h += '<option value="16:00">16:00</option>';
-        return h;
     }
 
-    function renderPagination(total) {
-        const cont = document.getElementById('paginationControls');
-        cont.innerHTML = '';
-        if(total <= 1) return;
-        for(let i=1; i<=total; i++) {
-            cont.innerHTML += `<button class="page-btn ${i===currentPage?'active':''}" onclick="currentPage=${i}; render(); window.scrollTo(0,0);">${i}</button>`;
+    function renderSidebar() {
+        const list = document.getElementById('pendingList');
+        list.innerHTML = '';
+        document.getElementById('pendingCount').innerText = propuestasPendientes.length;
+
+        propuestasPendientes.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'proposal-card';
+            card.id = item.ref;
+            card.draggable = true;
+            card.ondragstart = drag;
+
+            // Contar rápidamente cuántos pedidos tiene para mostrarlo en la tarjeta
+            const totalPed = item.pedidos.length;
+
+            card.innerHTML = `
+                <div class="ref-header">
+                    <span>${item.ref}</span>
+                    <span style="font-size:0.7em; color:var(--pending)">☰</span>
+                </div>
+                <div class="prov-name">${item.prov} <br><span style="font-size:0.85em; font-weight:normal;">(${totalPed} pedidos)</span></div>
+                
+                <div class="actions">
+                    <button class="btn-card btn-detalle" onclick="verDetalle('${item.ref}')">🔍 Detalle</button>
+                    <button class="btn-card btn-cancelar" onclick="cancelarPropuesta('${item.ref}')">✖ Cancelar</button>
+                </div>
+
+                <div class="placed-actions" style="display:none;">
+                    <button class="btn-icon" title="Ver Detalle" onclick="verDetalle('${item.ref}')">🔍</button>
+                    <button class="btn-icon" title="Devolver a Pendientes" onclick="devolverSidebar('${item.ref}')">↺</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    // --- LÓGICA DE DRAG & DROP ---
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.currentTarget.id);
+        ev.currentTarget.style.opacity = "0.5";
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function dragEnter(ev) {
+        ev.preventDefault();
+        if(ev.currentTarget.classList.contains('drop-zone')) {
+            ev.currentTarget.classList.add('drag-over');
         }
     }
 
-    function validar(ref) {
-        const item = rawData.find(x => x.ref === ref);
-        if(!item.horario) return alert("Asigne una franja horaria antes de validar la cita.");
-        if(confirm(`¿Validar propuesta ${ref} para las ${item.horario}?`)) { item.estado = "Validada"; render(); }
+    function dragLeave(ev) {
+        ev.currentTarget.classList.remove('drag-over');
     }
 
-    function cancelar(ref) {
-        if(confirm(`¿Anular propuesta ${ref}? Esta acción no se puede deshacer.`)) { rawData.find(x => x.ref === ref).estado = "Cancelada"; render(); }
+    function drop(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('drag-over');
+        
+        const data = ev.dataTransfer.getData("text");
+        const el = document.getElementById(data);
+        el.style.opacity = "1";
+
+        if(ev.currentTarget.classList.contains('drop-zone')) {
+            if(ev.currentTarget.childElementCount > 0) {
+                alert("Este slot horario ya está ocupado.");
+                return;
+            }
+
+            el.classList.add('placed');
+            el.querySelector('.actions').style.display = 'none';
+            el.querySelector('.placed-actions').style.display = 'flex';
+            
+            ev.currentTarget.appendChild(el);
+            actualizarContadorSidebar();
+        }
+    }
+
+    function dropToSidebar(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        devolverSidebar(data);
+    }
+
+    function devolverSidebar(refId) {
+        const el = document.getElementById(refId);
+        if(el) {
+            el.classList.remove('placed');
+            el.style.opacity = "1";
+            el.querySelector('.actions').style.display = 'flex';
+            el.querySelector('.placed-actions').style.display = 'none';
+            document.getElementById('pendingList').appendChild(el);
+            actualizarContadorSidebar();
+        }
+    }
+
+    function actualizarContadorSidebar() {
+        const list = document.getElementById('pendingList');
+        const count = list.querySelectorAll('.proposal-card').length;
+        document.getElementById('pendingCount').innerText = count;
+    }
+
+    // --- ACCIONES DE BOTONES ---
+    function cancelarPropuesta(ref) {
+        if(confirm(`¿Estás seguro de que quieres cancelar y eliminar la propuesta ${ref}?`)) {
+            propuestasPendientes = propuestasPendientes.filter(x => x.ref !== ref);
+            const el = document.getElementById(ref);
+            if(el) el.remove();
+            actualizarContadorSidebar();
+        }
     }
 
     function verDetalle(ref) {
-        const item = rawData.find(x => x.ref === ref);
+        const item = propuestasPendientes.find(x => x.ref === ref);
+        if(!item) return;
+
         document.getElementById('modalRef').innerText = ref;
         let tB = 0, tP = 0;
-        let h = `<table class="detalle-table"><thead><tr><th>Pedido</th><th>Secc</th><th>Alm</th><th title="Bultos Pequeños">C1</th><th title="Bultos Grandes">C2</th><th title="Medio Palet">P1</th><th title="Palet < 120">P2</th><th title="Palet > 120">P3</th><th title="Palet > 240">P4</th><th title="Jaulas">P5</th></tr></thead><tbody>`;
+        
+        // Tabla con todos los soportes
+        let h = `<table class="detalle-table">
+            <thead>
+                <tr>
+                    <th>Pedido</th>
+                    <th>Sección</th>
+                    <th>Almacén</th>
+                    <th title="Bultos Peq">C1</th>
+                    <th title="Bultos Gr">C2</th>
+                    <th title="Medio Palet">P1</th>
+                    <th title="Palet < 120">P2</th>
+                    <th title="Palet > 120">P3</th>
+                    <th title="Palet > 240">P4</th>
+                    <th title="Jaulas">P5</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        
         item.pedidos.forEach(p => {
-            tB += (p.c1 + p.c2); tP += (p.p1 + p.p2 + p.p3 + p.p4 + p.p5);
-            h += `<tr><td>${p.id}</td><td>${p.sec}</td><td>${p.alm}</td><td>${p.c1}</td><td>${p.c2}</td><td>${p.p1}</td><td>${p.p2}</td><td>${p.p3}</td><td>${p.p4}</td><td>${p.p5}</td></tr>`;
+            tB += (p.c1 + p.c2); 
+            tP += (p.p1 + p.p2 + p.p3 + p.p4 + p.p5);
+            h += `<tr>
+                <td><strong>${p.id}</strong></td>
+                <td>${p.sec}</td>
+                <td>${p.alm}</td>
+                <td>${p.c1}</td>
+                <td>${p.c2}</td>
+                <td>${p.p1}</td>
+                <td>${p.p2}</td>
+                <td>${p.p3}</td>
+                <td>${p.p4}</td>
+                <td>${p.p5}</td>
+            </tr>`;
         });
+        
         h += `</tbody></table>`;
         document.getElementById('modalTableContainer').innerHTML = h;
-        document.getElementById('modalSumatorio').innerHTML = `<div>Total Bultos (C1+C2): <span style="color:var(--danger)">${tB}</span></div><div>Total Palets (P1-P5): <span style="color:var(--danger)">${tP}</span></div>`;
+        document.getElementById('modalSumatorio').innerHTML = `
+            <div>Total Bultos (C1+C2): <span style="color:var(--danger); font-size:1.2em;">${tB}</span></div>
+            <div>Total Palets (P1-P5): <span style="color:var(--danger); font-size:1.2em;">${tP}</span></div>
+        `;
         document.getElementById('modalDetalle').classList.add('active');
     }
 
-    function cerrarDetalles() { document.getElementById('modalDetalle').classList.remove('active'); }
-    function resetAndRender() { currentPage = 1; render(); }
+    function cerrarDetalles() {
+        document.getElementById('modalDetalle').classList.remove('active');
+    }
 
-    window.onload = init;
+    // Inicializar
+    window.onload = () => {
+        initData();
+        renderCalendar();
+        renderSidebar();
+    };
+
+    document.addEventListener('dragend', function(event) {
+        if(event.target.classList.contains('proposal-card')) {
+            event.target.style.opacity = "1";
+        }
+    });
 </script>
 </body>
 </html>
