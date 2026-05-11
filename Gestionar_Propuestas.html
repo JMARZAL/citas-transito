@@ -17,6 +17,7 @@
             --danger: #E53935;
             --success: #2E7D32;
             --pending: #F57C00;
+            --request-blue: #0056b3;
         }
 
         body {
@@ -135,12 +136,18 @@
             width: 20%; 
         }
 
-        /* Celdas fijadas a 110px para que entren exactamente 2 propuestas minimizadas */
-        .calendar-table td {
+        .calendar-table td.drop-zone-cell {
             border: 1px solid var(--border-color);
-            height: 110px;
+            height: 100px; 
             vertical-align: top;
             padding: 6px;
+            background-color: var(--white);
+            transition: background-color 0.2s;
+        }
+
+        .calendar-table td.drop-zone-cell.drag-over {
+            background-color: #E3F2FD;
+            border: 2px dashed #2196F3;
         }
 
         .time-col {
@@ -152,23 +159,6 @@
             vertical-align: middle !important;
             font-size: 0.8em;
             border-bottom: 1px solid var(--border-color);
-        }
-
-        /* Zona de soltar (Slot) */
-        .drop-zone {
-            background-color: var(--white);
-            transition: background-color 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            height: 100%;
-            box-sizing: border-box;
-            justify-content: flex-start;
-        }
-
-        .drop-zone.drag-over {
-            background-color: #E3F2FD;
-            border: 2px dashed #2196F3;
         }
 
         /* Panel Derecho: Lista de Propuestas */
@@ -203,7 +193,7 @@
             background-color: #F9FAFC;
         }
 
-        /* Tarjetas Arrastrables (Propuestas) */
+        /* Tarjetas Arrastrables */
         .proposal-card {
             background: var(--white);
             border: 1px solid var(--border-color);
@@ -212,10 +202,9 @@
             margin-bottom: 12px;
             cursor: grab;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            transition: transform 0.2s, box-shadow 0.2s, padding 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
             border-left: 4px solid var(--obramat-yellow);
-            display: flex;
-            flex-direction: column;
+            display: block;
         }
 
         .proposal-card:active {
@@ -239,8 +228,21 @@
         .proposal-card .prov-name {
             font-size: 0.85em;
             color: var(--text-muted);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-weight: 600;
+            pointer-events: none;
+        }
+
+        /* Estilo para la nueva información de hora solicitada */
+        .proposal-card .req-time-info {
+            font-size: 0.8em;
+            color: var(--request-blue);
+            margin-bottom: 10px;
+            font-weight: 700;
+            background: #E3F2FD;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
             pointer-events: none;
         }
 
@@ -270,30 +272,28 @@
 
         /* Estilo de la tarjeta MINIMIZADA en el calendario */
         .proposal-card.placed {
-            margin-bottom: 0;
+            margin-bottom: 6px;
             padding: 8px 10px;
             border-left-color: var(--success);
             background-color: #E8F5E9;
+            display: flex;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
             height: auto;
         }
-
-        .proposal-card.placed .ref-header {
-            font-size: 0.9em;
-            margin-bottom: 0;
-        }
         
+        .proposal-card.placed:last-child { margin-bottom: 0; }
+        .proposal-card.placed .ref-header { font-size: 0.9em; margin-bottom: 0; }
         .proposal-card.placed .ref-header span:last-child { display: none; }
         .proposal-card.placed .prov-name { display: none; }
+        .proposal-card.placed .req-time-info { display: none; } /* Ocultar hora solicitada en el calendario */
         .proposal-card.placed .actions { display: none; } 
         
         .proposal-card.placed .placed-actions {
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            margin-top: 0;
         }
 
         .btn-icon {
@@ -335,28 +335,28 @@
 <div class="layout-wrapper">
     <div class="calendar-panel">
         <div class="calendar-header" id="calendarWeekLabel">
-            Semana Actual (Lunes a Viernes)
+            SEMANA ACTUAL (LUNES A VIERNES)
         </div>
         <div class="calendar-wrapper">
             <table class="calendar-table" id="calendarTable">
                 <thead>
                     <tr id="calendarDaysHeader">
                         <th class="time-col" style="position: sticky; left: 0; z-index: 11;">Hora</th>
-                        </tr>
+                    </tr>
                 </thead>
                 <tbody id="calendarBody">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
 
     <div class="sidebar-panel">
         <div class="sidebar-header">
-            <span>Pendientes de Asignar</span>
+            <span>PENDIENTES DE ASIGNAR</span>
             <span id="pendingCount" style="background: white; color: var(--obramat-dark); padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">0</span>
         </div>
         <div class="sidebar-list" id="pendingList" ondragover="allowDrop(event)" ondrop="dropToSidebar(event)">
-            </div>
+        </div>
     </div>
 </div>
 
@@ -396,21 +396,24 @@
                 });
             }
 
+            // --- NUEVA LÓGICA: Generar hora solicitada aleatoria (07:00 - 16:00) ---
+            const horaAleatoria = Math.floor(Math.random() * (16 - 7 + 1)) + 7;
+            const minutoAleatorio = Math.random() < 0.5 ? "00" : "30";
+            const horaSolicitada = `${String(horaAleatoria).padStart(2, '0')}:${minutoAleatorio}`;
+
             propuestasPendientes.push({
                 ref: `REF-${2026100 + i}`,
                 prov: proveedores[i % proveedores.length],
-                pedidos: pedidosGenerados
+                pedidos: pedidosGenerados,
+                horaSolicitada: horaSolicitada
             });
         }
     }
 
-    // --- RENDERIZAR INTERFAZ DEL CALENDARIO ---
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
     
     function renderCalendar() {
         const headerTr = document.getElementById('calendarDaysHeader');
-        
-        // Renderizar las 5 columnas de los días
         diasSemana.forEach((dia) => {
             const th = document.createElement('th');
             th.innerText = dia;
@@ -419,29 +422,24 @@
         });
 
         const tbody = document.getElementById('calendarBody');
-        
-        // Renderizar filas SOLO por horas enteras (07:00 a 16:00) => 1 fila = 1 hora
         for (let h = 7; h <= 16; h++) {
             const timeStr = `${String(h).padStart(2, '0')}:00`;
-            
             const tr = document.createElement('tr');
             const tdTime = document.createElement('td');
             tdTime.className = 'time-col';
             tdTime.innerText = timeStr;
             tr.appendChild(tdTime);
 
-            // Crear los slots interactivos para cada día (max 2 propuestas por slot)
             diasSemana.forEach((dia, index) => {
                 const td = document.createElement('td');
-                td.className = 'drop-zone';
-                td.id = `slot-${index}-${timeStr}`; // ID específico para este día y hora
+                td.className = 'drop-zone-cell';
+                td.id = `slot-${index}-${timeStr}`; 
                 td.ondragover = allowDrop;
                 td.ondragenter = dragEnter;
                 td.ondragleave = dragLeave;
                 td.ondrop = drop;
                 tr.appendChild(td);
             });
-
             tbody.appendChild(tr);
         }
     }
@@ -465,7 +463,9 @@
                     <span>${item.ref}</span>
                     <span style="font-size:0.7em; color:var(--pending)">☰</span>
                 </div>
-                <div class="prov-name">${item.prov} <br><span style="font-size:0.85em; font-weight:normal;">(${totalPed} pedidos)</span></div>
+                <div class="prov-name">${item.prov} (${totalPed} pedidos)</div>
+                
+                <div class="req-time-info">Solicita descargar: ${item.horaSolicitada}</div>
                 
                 <div class="actions">
                     <button class="btn-card btn-detalle" onclick="verDetalle('${item.ref}')">🔍 Detalle</button>
@@ -481,60 +481,46 @@
         });
     }
 
-    // --- LÓGICA DE DRAG & DROP BLINDADA ---
     function drag(ev) {
         ev.dataTransfer.setData("text", ev.currentTarget.id);
         ev.currentTarget.style.opacity = "0.5";
     }
 
-    function allowDrop(ev) {
-        ev.preventDefault();
-    }
+    function allowDrop(ev) { ev.preventDefault(); }
 
     function dragEnter(ev) {
         ev.preventDefault();
-        const dropZone = ev.target.closest('.drop-zone') || ev.target.closest('.sidebar-list');
-        if(dropZone && dropZone.classList.contains('drop-zone')) {
-            dropZone.classList.add('drag-over');
-        }
+        const dropZone = ev.target.closest('.drop-zone-cell') || ev.target.closest('.sidebar-list');
+        if(dropZone && dropZone.classList.contains('drop-zone-cell')) dropZone.classList.add('drag-over');
     }
 
     function dragLeave(ev) {
-        const dropZone = ev.target.closest('.drop-zone');
-        if(dropZone) {
-            dropZone.classList.remove('drag-over');
-        }
+        const dropZone = ev.target.closest('.drop-zone-cell');
+        if(dropZone) dropZone.classList.remove('drag-over');
     }
 
     function drop(ev) {
         ev.preventDefault();
-        
-        // Identificar la celda exacta donde hemos soltado la tarjeta
-        const dropZone = ev.target.closest('.drop-zone');
-        
+        const dropZone = ev.target.closest('.drop-zone-cell');
         if(dropZone) {
             dropZone.classList.remove('drag-over');
-            
             const data = ev.dataTransfer.getData("text");
             const el = document.getElementById(data);
             if(!el) return;
-
             el.style.opacity = "1";
 
-            // Contar cuántas propuestas (tarjetas) hay ya en este slot específico
             const currentCards = dropZone.querySelectorAll('.proposal-card').length;
             const isAlreadyHere = el.parentElement === dropZone;
 
-            // VALIDACIÓN ESTRICTA: LÍMITE DE 2 PROPUESTAS POR CELDA (1 hora completa)
             if(!isAlreadyHere && currentCards >= 2) {
-                alert("Esta franja de 1 hora ya está llena (Máximo 2 propuestas por celda).");
+                alert("Esta celda ya está llena (Máximo 2 propuestas por hora).");
                 return;
             }
 
-            // Minimizar tarjeta al soltarla
             el.classList.add('placed');
             el.querySelector('.actions').style.display = 'none';
             el.querySelector('.prov-name').style.display = 'none';
+            el.querySelector('.req-time-info').style.display = 'none'; // Ocultar al colocar
             el.querySelector('.placed-actions').style.display = 'flex';
             
             dropZone.appendChild(el);
@@ -551,25 +537,22 @@
     function devolverSidebar(refId) {
         const el = document.getElementById(refId);
         if(el) {
-            // Restaurar la tarjeta a su estado completo
             el.classList.remove('placed');
             el.style.opacity = "1";
             el.querySelector('.actions').style.display = 'flex';
             el.querySelector('.prov-name').style.display = 'block';
+            el.querySelector('.req-time-info').style.display = 'inline-block'; // Mostrar de nuevo
             el.querySelector('.placed-actions').style.display = 'none';
-            
             document.getElementById('pendingList').appendChild(el);
             actualizarContadorSidebar();
         }
     }
 
     function actualizarContadorSidebar() {
-        const list = document.getElementById('pendingList');
-        const count = list.querySelectorAll('.proposal-card').length;
+        const count = document.getElementById('pendingList').querySelectorAll('.proposal-card').length;
         document.getElementById('pendingCount').innerText = count;
     }
 
-    // --- ACCIONES DE BOTONES ---
     function cancelarPropuesta(ref) {
         if(confirm(`¿Estás seguro de que quieres cancelar y eliminar la propuesta ${ref}?`)) {
             propuestasPendientes = propuestasPendientes.filter(x => x.ref !== ref);
@@ -582,58 +565,21 @@
     function verDetalle(ref) {
         const item = propuestasPendientes.find(x => x.ref === ref);
         if(!item) return;
-
         document.getElementById('modalRef').innerText = ref;
         let tB = 0, tP = 0;
-        
-        let h = `<table class="detalle-table">
-            <thead>
-                <tr>
-                    <th>Pedido</th>
-                    <th>Sección</th>
-                    <th>Almacén</th>
-                    <th title="Bultos Peq">C1</th>
-                    <th title="Bultos Gr">C2</th>
-                    <th title="Medio Palet">P1</th>
-                    <th title="Palet < 120">P2</th>
-                    <th title="Palet > 120">P3</th>
-                    <th title="Palet > 240">P4</th>
-                    <th title="Jaulas">P5</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
+        let h = `<table class="detalle-table"><thead><tr><th>Pedido</th><th>Sección</th><th>Almacén</th><th>C1</th><th>C2</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th></tr></thead><tbody>`;
         item.pedidos.forEach(p => {
-            tB += (p.c1 + p.c2); 
-            tP += (p.p1 + p.p2 + p.p3 + p.p4 + p.p5);
-            h += `<tr>
-                <td><strong>${p.id}</strong></td>
-                <td>${p.sec}</td>
-                <td>${p.alm}</td>
-                <td>${p.c1}</td>
-                <td>${p.c2}</td>
-                <td>${p.p1}</td>
-                <td>${p.p2}</td>
-                <td>${p.p3}</td>
-                <td>${p.p4}</td>
-                <td>${p.p5}</td>
-            </tr>`;
+            tB += (p.c1 + p.c2); tP += (p.p1 + p.p2 + p.p3 + p.p4 + p.p5);
+            h += `<tr><td><strong>${p.id}</strong></td><td>${p.sec}</td><td>${p.alm}</td><td>${p.c1}</td><td>${p.c2}</td><td>${p.p1}</td><td>${p.p2}</td><td>${p.p3}</td><td>${p.p4}</td><td>${p.p5}</td></tr>`;
         });
-        
         h += `</tbody></table>`;
         document.getElementById('modalTableContainer').innerHTML = h;
-        document.getElementById('modalSumatorio').innerHTML = `
-            <div>Total Bultos (C1+C2): <span style="color:var(--danger); font-size:1.2em;">${tB}</span></div>
-            <div>Total Palets (P1-P5): <span style="color:var(--danger); font-size:1.2em;">${tP}</span></div>
-        `;
+        document.getElementById('modalSumatorio').innerHTML = `<div>Total Bultos: <span style="color:var(--danger)">${tB}</span></div><div>Total Palets: <span style="color:var(--danger)">${tP}</span></div>`;
         document.getElementById('modalDetalle').classList.add('active');
     }
 
-    function cerrarDetalles() {
-        document.getElementById('modalDetalle').classList.remove('active');
-    }
+    function cerrarDetalles() { document.getElementById('modalDetalle').classList.remove('active'); }
 
-    // Inicializar
     window.onload = () => {
         initData();
         renderCalendar();
@@ -641,9 +587,7 @@
     };
 
     document.addEventListener('dragend', function(event) {
-        if(event.target.classList.contains('proposal-card')) {
-            event.target.style.opacity = "1";
-        }
+        if(event.target.classList.contains('proposal-card')) event.target.style.opacity = "1";
     });
 </script>
 </body>
